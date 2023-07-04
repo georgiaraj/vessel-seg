@@ -12,11 +12,13 @@ class UNet(nn.Module):
         self.decoder_layers = []
         
         for _ in range(num_layers):
+            print(f'Adding encoder layer with {num_channels} channels and {num_filters} filters')
             self.encoder_layers.append(nn.Conv2d(num_channels, num_filters, 3, stride=2))
             num_channels = num_filters
             num_filters *= 2
 
         for _ in range(num_layers):
+            print(f'Adding decoder layer with {num_filters} channels and {num_channels} filters')
             self.decoder_layers.append(nn.ConvTranspose2d(num_filters, num_channels, 3, stride=2))
             num_filters = num_channels
             num_channels /= 2    
