@@ -24,6 +24,7 @@ class VesselSegDataset(Dataset):
             raise RuntimeError(f"No images found in videos {' '.join(self.videos)}")
 
         self.label_list = [im.replace('images', 'labels') for im in self.image_list]
+        print(f'Number of images added to dataset: {self.__len__()}')
 
     def __len__(self):
         return len(self.image_list)
