@@ -10,7 +10,7 @@ class UNet(nn.Module):
         num_filters = init_filters
         encoders = []
         decoders = []
-        
+
         for _ in range(num_layers):
             print(f'Adding encoder layer with {num_channels} channels and {num_filters} filters')
             encoders.append(nn.Conv2d(num_channels, num_filters, 3, stride=2))
@@ -18,16 +18,19 @@ class UNet(nn.Module):
             num_filters *= 2
 
         self.encoder_layers = nn.ModuleList(encoders)
-        
+
         for _ in range(num_layers):
             num_filters = num_channels
-            num_channels /= 2    
+            num_channels /= 2
             print(f'Adding decoder layer with {num_filters} channels and {num_channels} filters')
             decoders.append(nn.ConvTranspose2d(int(num_filters), int(num_channels), 3,
                                                           stride=2))
 
         self.decode_layers = nn.ModuleList(decoders)
-            
+
+        # Ensure that each pixel predicts just one of the possible classes
+        self.softmax = nn.Softmax(dim=3)
+
     def forward(self, images):
 
         for enc in self.encoder_layers:
@@ -38,7 +41,6 @@ class UNet(nn.Module):
             x = dec(x)
             x = torch.relu(x)
 
-        return x
+        x = self.softmax(x)
 
-    
-    
+        return x
