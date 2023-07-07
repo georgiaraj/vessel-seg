@@ -8,21 +8,26 @@ class UNet(nn.Module):
 
         num_channels = 3
         num_filters = init_filters
-        self.encoder_layers = []
-        self.decoder_layers = []
+        encoders = []
+        decoders = []
         
         for _ in range(num_layers):
             print(f'Adding encoder layer with {num_channels} channels and {num_filters} filters')
-            self.encoder_layers.append(nn.Conv2d(num_channels, num_filters, 3, stride=2))
+            encoders.append(nn.Conv2d(num_channels, num_filters, 3, stride=2))
             num_channels = num_filters
             num_filters *= 2
 
+        self.encoder_layers = nn.ModuleList(encoders)
+        
         for _ in range(num_layers):
-            print(f'Adding decoder layer with {num_filters} channels and {num_channels} filters')
-            self.decoder_layers.append(nn.ConvTranspose2d(num_filters, num_channels, 3, stride=2))
             num_filters = num_channels
             num_channels /= 2    
-        
+            print(f'Adding decoder layer with {num_filters} channels and {num_channels} filters')
+            decoders.append(nn.ConvTranspose2d(int(num_filters), int(num_channels), 3,
+                                                          stride=2))
+
+        self.decode_layers = nn.ModuleList(decoders)
+            
     def forward(self, images):
 
         for enc in self.encoder_layers:
