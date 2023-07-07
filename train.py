@@ -1,6 +1,8 @@
 from model import UNet
+from datasets import data
 
-model = UNet(3, 8)
+def train_unet():
+    model = UNet(3, 8)
 
-print(model)
+    print(model)
 
