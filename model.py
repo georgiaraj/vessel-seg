@@ -1,3 +1,4 @@
+import pdb
 import torch
 from torch import nn
 
@@ -26,12 +27,12 @@ class UNet(nn.Module):
             decoders.append(nn.ConvTranspose2d(int(num_filters), int(num_channels), 3,
                                                           stride=2))
 
-        self.decode_layers = nn.ModuleList(decoders)
+        self.decoder_layers = nn.ModuleList(decoders)
 
         # Ensure that each pixel predicts just one of the possible classes
         self.softmax = nn.Softmax(dim=3)
 
-    def forward(self, images):
+    def forward(self, x):
 
         for enc in self.encoder_layers:
             x = enc(x)
