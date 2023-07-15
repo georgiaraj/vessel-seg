@@ -1,12 +1,15 @@
+import pdb
 import os
 from pathlib import Path
-from torch.utils.data import Dataset
-from torchvision.io import read_image
 
+import torch
+from torch.utils.data import Dataset
+from torchvision.io import read_image, ImageReadMode
+from torchvision.transforms.v2 import Resize, ConvertImageDtype, ToDtype
 
 class VesselSegDataset(Dataset):
 
-    def __init__(self, root_dir, videos=None):
+    def __init__(self, root_dir, videos=None, imsize=480, transforms=None):
         self.root_dir = Path(root_dir)
         if videos is None:
             # Use all videos that are found
@@ -26,12 +29,22 @@ class VesselSegDataset(Dataset):
         self.label_list = [im.replace('images', 'labels') for im in self.image_list]
         print(f'Number of images added to dataset: {self.__len__()}')
 
+        self.image_transforms = [ConvertImageDtype(torch.float32), Resize(imsize)]
+        self.label_transforms = [ToDtype(torch.float32), Resize(imsize)]
+
+        if transforms:
+            self.image_transforms += transforms
+            self.label_transforms += transforms
+
+        self.image_transforms = torch.nn.Sequential(*self.image_transforms)
+        self.label_transforms = torch.nn.Sequential(*self.label_transforms)
+
     def __len__(self):
         return len(self.image_list)
 
     def __getitem__(self, idx):
-        image = read_image(self.image_list[idx])
-        labels = read_image(self.label_list[idx])
+        image = self.image_transforms(read_image(self.image_list[idx], mode=ImageReadMode.RGB))
+        labels = self.label_transforms(read_image(self.label_list[idx]))
         return image, labels
 
     @staticmethod
