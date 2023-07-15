@@ -23,9 +23,10 @@ class UNet(nn.Module):
         for _ in range(num_layers):
             num_filters = num_channels
             num_channels /= 2
+            padding = 0 if num_filters > init_filters else 1
             print(f'Adding decoder layer with {num_filters} channels and {num_channels} filters')
             decoders.append(nn.ConvTranspose2d(int(num_filters), int(num_channels), 3,
-                                                          stride=2))
+                                                          stride=2, output_padding=padding))
 
         self.decoder_layers = nn.ModuleList(decoders)
 
