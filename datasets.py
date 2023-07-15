@@ -30,7 +30,7 @@ class VesselSegDataset(Dataset):
         print(f'Number of images added to dataset: {self.__len__()}')
 
         self.image_transforms = [ConvertImageDtype(torch.float32), Resize(imsize)]
-        self.label_transforms = [ToDtype(torch.float32), Resize(imsize)]
+        self.label_transforms = [ToDtype(torch.long), Resize(imsize)]
 
         if transforms:
             self.image_transforms += transforms
@@ -45,7 +45,7 @@ class VesselSegDataset(Dataset):
     def __getitem__(self, idx):
         image = self.image_transforms(read_image(self.image_list[idx], mode=ImageReadMode.RGB))
         labels = self.label_transforms(read_image(self.label_list[idx]))
-        return image, labels
+        return image, labels.squeeze()
 
     @staticmethod
     def _get_image_list(video):
