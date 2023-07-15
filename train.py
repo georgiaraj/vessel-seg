@@ -45,6 +45,8 @@ def train(model, train_dataloader, val_dataloader, learning_rate=0.001, num_epoc
                 last_loss = running_loss / 100
                 print(f'batch {i} loss: {last_loss}')
                 running_loss = 0.
+            elif i % 10 == 9:
+                print('.', flush=False)
 
         return last_loss
 
