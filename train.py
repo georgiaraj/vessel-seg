@@ -30,8 +30,8 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
         for i, data in enumerate(train_dataloader):
             inputs, labels = data
 
-            inputs.to(device)
-            labels.to(device)
+            inputs = inputs.to(device)
+            labels = labels.to(device)
 
             print(f'{inputs.device}')
             print(f'{labels.device}')
