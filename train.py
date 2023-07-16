@@ -82,7 +82,6 @@ if __name__ == '__main__':
     #test_dataset = data['vessel_data'](args.test_data_dir)
 
     print(train_dataset)
-    print(test_dataset)
 
     train_set, val_set = torch.utils.data.random_split(train_dataset, [0.8, 0.2])
     train_dataloader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
