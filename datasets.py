@@ -32,7 +32,7 @@ class VesselSegDataset(Dataset):
         print(f'Number of images added to dataset: {self.__len__()}')
 
         self.image_transforms = [ConvertImageDtype(torch.float32), Resize(imsize, antialias=True)]
-        self.label_transforms = [ToDtype(torch.long), Resize(imsize)]
+        self.label_transforms = [ToDtype(torch.long), Resize(imsize, antialias=True)]
 
         if transforms:
             self.image_transforms += transforms
