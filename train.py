@@ -44,7 +44,7 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
 
             running_loss += loss.item()
 
-            if i % 10 == 9:
+            if i % 10 == 0:
                 last_loss = running_loss / 10
                 print(f'batch {i} loss: {last_loss}', flush=True)
                 running_loss = 0.
@@ -96,9 +96,9 @@ if __name__ == '__main__':
 
     train_set, val_set = torch.utils.data.random_split(train_dataset, [0.8, 0.2])
     train_dataloader = DataLoader(train_set, batch_size=args.batch_size,
-                                  shuffle=True, num_workers=10)
+                                  shuffle=True, num_workers=2)
     val_dataloader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False,
-                                num_workers=10)
+                                num_workers=2)
     #train_dataloader.to(device)
     #val_dataloader.to(device)
 
