@@ -92,8 +92,10 @@ if __name__ == '__main__':
     #test_dataset = data['vessel_data'](args.test_data_dir)
 
     train_set, val_set = torch.utils.data.random_split(train_dataset, [0.8, 0.2])
-    train_dataloader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
+    train_dataloader = DataLoader(train_set, batch_size=args.batch_size,
+                                  shuffle=True, num_workers=10)
+    val_dataloader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False,
+                                num_workers=10)
     #train_dataloader.to(device)
     #val_dataloader.to(device)
 
