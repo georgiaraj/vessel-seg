@@ -49,7 +49,7 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
                 print(f'batch {i} loss: {last_loss}')
                 running_loss = 0.
             elif i % 10 == 9:
-                print('.', flush=False)
+                print('.', end="")
 
         return last_loss
 
