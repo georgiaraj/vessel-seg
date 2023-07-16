@@ -54,7 +54,7 @@ class VesselSegDataset(Dataset):
         image_path = video / 'images'
         images = [str(image_path / im) for im in os.listdir(image_path) if im.endswith('.png')]
         image_list = [im for im in images if (os.path.exists(im) and
-                                              os.path.exists(im.replace('images', 'labels'))]
+                                              os.path.exists(im.replace('images', 'labels')))]
 
         if len(image_list) == 0:
             print(f'Warning: No images found in video directory {video}')
