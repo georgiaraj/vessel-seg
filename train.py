@@ -46,10 +46,10 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
 
             if i % 100 == 99:
                 last_loss = running_loss / 100
-                print(f'batch {i} loss: {last_loss}')
+                print(f'batch {i} loss: {last_loss}', flush=True)
                 running_loss = 0.
             elif i % 10 == 9:
-                print('.', end="")
+                print('.', end="", flush=True)
 
         return last_loss
 
@@ -65,6 +65,9 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
         with torch.no_grad():
             for i, vdata in enumerate(val_dataloader):
                 vinputs, vlabels = vdata
+                vinputs = vinput.to(device)
+                vlabels = vlabels.to(device)
+
                 voutputs = model(vinputs)
                 vloss = loss_fn(voutputs, vlabels)
                 running_vloss += vloss
