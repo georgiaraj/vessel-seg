@@ -45,7 +45,7 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
             running_loss += loss.item()
 
             if i % 10 == 9:
-                last_loss = running_loss / 100
+                last_loss = running_loss / 10
                 print(f'batch {i} loss: {last_loss}', flush=True)
                 running_loss = 0.
             else:
