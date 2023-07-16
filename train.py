@@ -18,7 +18,7 @@ def get_args():
     parser.add_argument('--batch-size', default=32, type=int)
     return parser.parse_args()
 
-def train(model, train_dataloader, val_dataloader, learning_rate=0.001, num_epochs=20):
+def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, num_epochs=20):
 
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -29,6 +29,9 @@ def train(model, train_dataloader, val_dataloader, learning_rate=0.001, num_epoc
 
         for i, data in enumerate(train_dataloader):
             inputs, labels = data
+
+            inputs.to(device)
+            labels.to(device)
 
             optimizer.zero_grad()
 
@@ -78,13 +81,20 @@ if __name__ == '__main__':
 
     print(model)
 
+
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+    print(f'Using device: {device} for training.')
+
+    model.to(device)
+
     train_dataset = data['vessel_data'](args.train_data_dir)
     #test_dataset = data['vessel_data'](args.test_data_dir)
-
-    print(train_dataset)
 
     train_set, val_set = torch.utils.data.random_split(train_dataset, [0.8, 0.2])
     train_dataloader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False)
+    #train_dataloader.to(device)
+    #val_dataloader.to(device)
 
-    train(model, train_dataloader, val_dataloader)
+    train(model, train_dataloader, val_dataloader, device)
