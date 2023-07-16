@@ -65,7 +65,7 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
         with torch.no_grad():
             for i, vdata in enumerate(val_dataloader):
                 vinputs, vlabels = vdata
-                vinputs = vinput.to(device)
+                vinputs = vinputs.to(device)
                 vlabels = vlabels.to(device)
 
                 voutputs = model(vinputs)
