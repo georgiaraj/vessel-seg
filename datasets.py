@@ -54,7 +54,7 @@ class VesselSegDataset(Dataset):
         image_list = [im for im in images if os.path.exists(im)]
 
         if len(image_list) == 0:
-            raise Warning(f'No images found in video directory {video}')
+            print(f'Warning: No images found in video directory {video}')
 
         print(f'Adding {len(image_list)} images for video {video}')
 
