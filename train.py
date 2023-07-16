@@ -33,9 +33,6 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
             inputs = inputs.to(device)
             labels = labels.to(device)
 
-            print(f'{inputs.device}')
-            print(f'{labels.device}')
-
             optimizer.zero_grad()
 
             outputs = model(inputs)
