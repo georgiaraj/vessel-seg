@@ -43,7 +43,7 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
             optimizer.step()
 
             running_loss += loss.item()
-
+            print(running_loss)
             if i % 10 == 0:
                 last_loss = running_loss / 10
                 print(f'batch {i} loss: {last_loss}', flush=True)
@@ -72,7 +72,7 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
                 vloss = loss_fn(voutputs, vlabels)
                 running_vloss += vloss
 
-        avg_vloss = running_vloss / (epoch + 1)
+        avg_vloss = running_vloss / (i + 1)
         print(f'train loss: {avg_loss} val_loss: {avg_vloss}')
 
 
