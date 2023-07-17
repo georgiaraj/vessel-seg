@@ -43,10 +43,9 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
             optimizer.step()
 
             running_loss += loss.item()
-            print(running_loss)
-            if i % 10 == 0:
+            if i % 10 == 0 and i > 0:
                 last_loss = running_loss / 10
-                print(f'batch {i} loss: {last_loss}', flush=True)
+                print(f'\nbatch {i} loss: {last_loss}', flush=True)
                 running_loss = 0.
             else:
                 print('.', end="", flush=True)
