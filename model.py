@@ -31,7 +31,7 @@ class UNet(nn.Module):
         self.decoder_layers = nn.ModuleList(decoders)
 
         # Ensure that each pixel predicts just one of the possible classes
-        self.softmax = nn.Softmax(dim=3)
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
 
