@@ -18,6 +18,7 @@ def get_args():
     parser.add_argument('--batch-size', default=32, type=int)
     return parser.parse_args()
 
+
 def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, num_epochs=20):
 
     loss_fn = torch.nn.CrossEntropyLoss()
