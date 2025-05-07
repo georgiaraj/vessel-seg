@@ -16,13 +16,19 @@ def get_args():
     parser.add_argument('--test-videos', default=None, nargs='+', type=str,
                         help='Videos to use for test. If empty all are used.')
     parser.add_argument('--batch-size', default=32, type=int)
+    parser.add_argument('--learning-rate', default=0.001, type=float)
+    parser.add_argument('--num-epochs', default=20, type=int)
+    parser.add_argument('--verbose', action='store_true', help='Verbose output')
     return parser.parse_args()
 
 
-def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, num_epochs=20):
+def train(model, train_dataloader, val_dataloader, device,
+          learning_rate=0.001, num_epochs=20, verbose=False):
 
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5,
+                                                           patience=5, verbose=True)
 
     def train_one_epoch(epoch_index):
         running_loss = 0.
@@ -46,7 +52,8 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
             running_loss += loss.item()
             if i % 10 == 0 and i > 0:
                 last_loss = running_loss / 10
-                print(f'\nbatch {i} running loss: {last_loss}', flush=True)
+                if verbose:
+                    print(f'\nbatch {i} running loss: {last_loss}', flush=True)
                 running_loss = 0.
             else:
                 print('.', end="", flush=True)
@@ -73,7 +80,8 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
                 running_vloss += vloss
 
         avg_vloss = running_vloss / (i + 1)
-        print(f'train loss: {avg_loss} val_loss: {avg_vloss}')
+        print(f'Epoch {epoch} complete, train loss: {avg_loss} val_loss: {avg_vloss}')
+        scheduler.step(avg_vloss)
 
 
 if __name__ == '__main__':
@@ -93,7 +101,7 @@ if __name__ == '__main__':
     model.to(device)
 
     train_dataset = data['vessel_data'](args.train_data_dir)
-    #test_dataset = data['vessel_data'](args.test_data_dir)
+    test_dataset = data['vessel_data'](args.test_data_dir)
 
     train_set, val_set = torch.utils.data.random_split(train_dataset, [0.8, 0.2])
     train_dataloader = DataLoader(train_set, batch_size=args.batch_size,
@@ -103,4 +111,27 @@ if __name__ == '__main__':
     #train_dataloader.to(device)
     #val_dataloader.to(device)
 
-    train(model, train_dataloader, val_dataloader, device)
+    train(model, train_dataloader, val_dataloader, device,
+          args.learning_rate, args.num_epochs, args.verbose)
+
+    # Save the model
+    torch.save(model.state_dict(), 'unet_model.pth')
+
+    # Test the model
+    test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size,
+                                 shuffle=False, num_workers=2)
+
+    for i, data in enumerate(test_dataloader):
+        inputs, labels = data
+        inputs = inputs.to(device)
+
+        outputs = model(inputs)
+
+        # Save the produced segmentation masks
+        for j in zip(outputs, labels):
+            output_mask = outputs[j].cpu().detach().numpy() * 50
+            label_mask = labels[j] * 50
+            # Save the output mask as needed, e.g., using PIL or OpenCV
+            # For example:
+            Image.fromarray(output_mask).save(f'output_mask_{i}_{j}.png')
+            Image.fromarray(label_mask).save(f'label_mask_{i}_{j}.png')
