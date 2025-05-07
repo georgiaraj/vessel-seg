@@ -1,3 +1,4 @@
+import pdb
 import argparse
 
 import torch
@@ -5,6 +6,7 @@ from torch.utils.data import DataLoader
 
 from model import UNet
 from datasets import data
+from PIL import Image
 
 
 def get_args():
@@ -100,8 +102,8 @@ if __name__ == '__main__':
 
     model.to(device)
 
-    train_dataset = data['vessel_data'](args.train_data_dir)
-    test_dataset = data['vessel_data'](args.test_data_dir)
+    train_dataset = data['vessel_data'](args.train_data_dir, videos=args.train_videos)
+    test_dataset = data['vessel_data'](args.test_data_dir, videos=args.test_videos)
 
     train_set, val_set = torch.utils.data.random_split(train_dataset, [0.8, 0.2])
     train_dataloader = DataLoader(train_set, batch_size=args.batch_size,
@@ -128,10 +130,10 @@ if __name__ == '__main__':
         outputs = model(inputs)
 
         # Save the produced segmentation masks
-        for j in zip(outputs, labels):
-            output_mask = outputs[j].cpu().detach().numpy() * 50
-            label_mask = labels[j] * 50
-            # Save the output mask as needed, e.g., using PIL or OpenCV
-            # For example:
-            Image.fromarray(output_mask).save(f'output_mask_{i}_{j}.png')
+        for out, label in zip(outputs, labels):
+            output_masks = out.cpu().detach().numpy() * 255
+            label_mask = label * 50
+            # Save the output mask and original labels
+            for m, mask in enumerate(output_masks):
+                Image.fromarray(out).save(f'output_mask_{i}_{j}_{m}.png')
             Image.fromarray(label_mask).save(f'label_mask_{i}_{j}.png')

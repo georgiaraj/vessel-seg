@@ -9,27 +9,33 @@ from torchvision.transforms.v2 import Resize, ConvertImageDtype, ToDtype
 
 class VesselSegDataset(Dataset):
 
-    def __init__(self, root_dir, videos=None, imsize=480, transforms=None):
+    def __init__(self, root_dir, videos=None, imsize=480, transforms=None, verbose=False):
         self.root_dir = Path(root_dir)
+
         if videos is None:
             # Use all videos that are found
             videos = os.listdir(self.root_dir)
         self.videos = [self.root_dir / vid for vid in videos
-                       if os.path.isdir(self.root_dir / vid) and os.path.exists(self.root_dir / vid)]
+                       if os.path.isdir(self.root_dir / vid) and
+                       os.path.exists(self.root_dir / vid)]
         if len(self.videos) == 0:
             raise RuntimeError('No videos available to create dataset')
 
         self.image_list = []
         for vid in self.videos:
             self.image_list.extend(self._get_image_list(vid))
-            print(f'Number of images added so far: {len(self.image_list)}.')
+
+            if verbose:
+                print(f'Adding images for video {video}')
+                print(f'Number of images added so far: {len(self.image_list)}.')
 
         if len(self.image_list) == 0:
             raise RuntimeError(f"No images found in videos "
                                f"{' '.join([str(v) for v in self.videos])}")
 
         self.label_list = [im.replace('images', 'labels') for im in self.image_list]
-        print(f'Number of images added to dataset: {self.__len__()}')
+        if verbose:
+            print(f'Number of images added to dataset: {self.__len__()}')
 
         self.image_transforms = [ConvertImageDtype(torch.float32), Resize(imsize, antialias=True)]
         self.label_transforms = [ToDtype(torch.long), Resize(imsize, antialias=True)]
@@ -58,8 +64,6 @@ class VesselSegDataset(Dataset):
 
         if len(image_list) == 0:
             print(f'Warning: No images found in video directory {video}')
-
-        print(f'Adding {len(image_list)} images for video {video}')
 
         return image_list
 
