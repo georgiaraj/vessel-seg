@@ -1,12 +1,14 @@
 import pdb
 import argparse
+import numpy as np
+from model import UNet
+from datasets import data
+from PIL import Image
+from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
 
-from model import UNet
-from datasets import data
-from PIL import Image
 
 
 def get_args():
@@ -17,9 +19,14 @@ def get_args():
                         help='Videos to use for train. If empty all are used.')
     parser.add_argument('--test-videos', default=None, nargs='+', type=str,
                         help='Videos to use for test. If empty all are used.')
-    parser.add_argument('--batch-size', default=32, type=int)
-    parser.add_argument('--learning-rate', default=0.001, type=float)
-    parser.add_argument('--num-epochs', default=20, type=int)
+    parser.add_argument('--output-dir', default='output', type=str,
+                        help='Directory to save the output masks')
+    parser.add_argument('--batch-size', default=32, type=int,
+                        help='Batch size for training')
+    parser.add_argument('--learning-rate', default=0.001, type=float,
+                        help='Learning rate for training')
+    parser.add_argument('--num-epochs', default=20, type=int,
+                        help='Number of epochs for training')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     return parser.parse_args()
 
@@ -95,6 +102,8 @@ if __name__ == '__main__':
 
     print(model)
 
+    output = Path(args.output_dir)
+    output.mkdir(parents=True, exist_ok=True)
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -113,8 +122,8 @@ if __name__ == '__main__':
     #train_dataloader.to(device)
     #val_dataloader.to(device)
 
-    train(model, train_dataloader, val_dataloader, device,
-          args.learning_rate, args.num_epochs, args.verbose)
+    #train(model, train_dataloader, val_dataloader, device,
+    #      args.learning_rate, args.num_epochs, args.verbose)
 
     # Save the model
     torch.save(model.state_dict(), 'unet_model.pth')
@@ -123,6 +132,7 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size,
                                  shuffle=False, num_workers=2)
 
+    n = 0
     for i, data in enumerate(test_dataloader):
         inputs, labels = data
         inputs = inputs.to(device)
@@ -131,9 +141,13 @@ if __name__ == '__main__':
 
         # Save the produced segmentation masks
         for out, label in zip(outputs, labels):
-            output_masks = out.cpu().detach().numpy() * 255
+            output_masks = out.cpu().detach() * 255
             label_mask = label * 50
             # Save the output mask and original labels
             for m, mask in enumerate(output_masks):
-                Image.fromarray(out).save(f'output_mask_{i}_{j}_{m}.png')
-            Image.fromarray(label_mask).save(f'label_mask_{i}_{j}.png')
+                im = Image.fromarray(mask.numpy())
+                im = im.convert('L')
+                im.save(str(output / f'output_mask_{n}_{m}.png'))
+            Image.fromarray(label_mask.numpy().astype(np.uint8)).save(
+                str(output / f'original_label_{n}.png'))
+            n += 1
