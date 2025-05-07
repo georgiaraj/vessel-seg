@@ -27,14 +27,18 @@ class DoubleConv(nn.Module):
 class UNetDecoder(nn.Module):
     def __init__(self, in_channels, out_channels, kernel=3):
         super().__init__()
-        self.conv = DoubleConv(in_channels, out_channels * 2 , kernel=kernel)
-        self.upconv = nn.ConvTranspose2d(out_channels * 2, out_channels, kernel_size=2)
+        self.upconv = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
+        self.conv = DoubleConv(in_channels, out_channels, kernel=kernel)
 
-    def forward(self, x):
-        x = F.interpolate(x, scale_factor=2,
-                          mode='bilinear', align_corners=True)
-        x = self.conv(x)
-        return self.upconv(x)
+    def forward(self, x, skip_input):
+        x = self.upconv(x)
+        padding = (skip_input.shape[2] - x.shape[2]) // 2
+        extra_padding = (skip_input.shape[2] - x.shape[2]) % 2
+        x = F.pad(x, (padding, padding + extra_padding,
+                      padding, padding + extra_padding))
+        x = torch.cat((x, skip_input), dim=1)
+        return self.conv(x)
+
 
 class UNet(nn.Module):
 
@@ -42,7 +46,7 @@ class UNet(nn.Module):
         super().__init__()
 
         num_channels = 3
-        num_filters = init_filters // 2
+        num_filters = init_filters
         encoders = []
         decoders = []
 
@@ -56,13 +60,13 @@ class UNet(nn.Module):
 
         self.encoder_layers = nn.ModuleList(encoders)
 
-        self.middle_conv = nn.Conv2d(num_filters, num_filters // 2, kernel_size=2, padding=1)
+        num_channels *= 2
+        num_filters = num_filters // 2
 
         for i in range(num_layers):
-            num_channels //= 2
-            padding = 0 if num_filters > init_filters else 1
-            print(f'Adding decoder layer with {num_filters} channels and {num_channels} filters')
-            decoders.append(UNetDecoder(int(num_filters), int(num_channels), kernel=3))
+            print(f'Adding decoder layer with {num_channels} channels and {num_filters} filters')
+            decoders.append(UNetDecoder(int(num_channels), int(num_filters), kernel=3))
+            num_channels = num_filters
             num_filters //= 2
 
         self.decoder_layers = nn.ModuleList(decoders)
@@ -74,6 +78,7 @@ class UNet(nn.Module):
 
     def forward(self, x):
 
+        original_size = x.size()[2:]
         x = self.first_conv(x)
 
         inputs = []
@@ -82,18 +87,14 @@ class UNet(nn.Module):
             x = F.max_pool2d(x, kernel_size=2)
             x = enc(x)
 
-        x = self.middle_conv(x)
-
         for dec, inp in zip(self.decoder_layers, inputs[::-1]):
-            print(f'Skip input shape: {inp.shape} x shape: {x.shape}')
-            x = F.interpolate(x, scale_factor=2,
-                                          mode='bilinear', align_corners=True)
-            padding = (inp.shape[2] - x.shape[2]) // 2
-            extra = (inp.shape[2] - x.shape[2]) % 2
-            x = F.pad(x, (padding, padding + extra, padding, padding + extra))
-            x = torch.concat([x, inp], dim=1)
-            x = dec(x)
+            x = dec(x, inp)
 
         x = self.final_conv(x)
+        # Padding to ensure that the output size matches the input size
+        padding = (original_size[0] - x.shape[2]) // 2
+        extra_padding = (original_size[0] - x.shape[2]) % 2
+        x = F.pad(x, (padding, padding + extra_padding,
+                      padding, padding + extra_padding))
         x = self.softmax(x)
         return x
