@@ -46,7 +46,7 @@ def train(model, train_dataloader, val_dataloader, device, learning_rate=0.001, 
             running_loss += loss.item()
             if i % 10 == 0 and i > 0:
                 last_loss = running_loss / 10
-                print(f'\nbatch {i} loss: {last_loss}', flush=True)
+                print(f'\nbatch {i} running loss: {last_loss}', flush=True)
                 running_loss = 0.
             else:
                 print('.', end="", flush=True)
@@ -81,6 +81,7 @@ if __name__ == '__main__':
     args = get_args()
 
     model = UNet(3, 8)
+    #model = UNet(5, 64)
 
     print(model)
 
