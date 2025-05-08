@@ -9,6 +9,15 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
+# Calculate dice loss from one hot encoded predictions and integer labels
+def dice_loss(pred, target):
+    smooth = 1e-6
+    pred = torch.argmax(pred, dim=1)
+    pred = pred.view(-1)
+    target = target.view(-1)
+
+    intersection = (pred * target).sum()
+    return 1 - (2. * intersection + smooth) / (pred.sum() + target.sum() + smooth)
 
 
 def get_args():
@@ -75,6 +84,7 @@ def train(model, train_dataloader, val_dataloader, device,
         avg_loss = train_one_epoch(epoch)
 
         running_vloss = 0.0
+        running_dice = 0.0
 
         model.eval()
 
@@ -86,10 +96,14 @@ def train(model, train_dataloader, val_dataloader, device,
 
                 voutputs = model(vinputs)
                 vloss = loss_fn(voutputs, vlabels)
+                dice_score = dice_loss(voutputs, vlabels)
                 running_vloss += vloss
+                running_dice += dice_score
 
         avg_vloss = running_vloss / (i + 1)
-        print(f'Epoch {epoch} complete, train loss: {avg_loss} val_loss: {avg_vloss}')
+        avg_dice = running_dice / (i + 1)
+        print(f'Epoch {epoch} complete, train loss: {avg_loss} val_loss: {avg_vloss} '
+                  f'val_dice: {avg_dice}', flush=True)
         scheduler.step(avg_vloss)
 
 
@@ -133,11 +147,15 @@ if __name__ == '__main__':
                                  shuffle=False, num_workers=2)
 
     n = 0
+    sum_dice = 0
     for i, data in enumerate(test_dataloader):
         inputs, labels = data
         inputs = inputs.to(device)
 
         outputs = model(inputs)
+
+        dice_score = dice_loss(outputs, labels)
+        sum_dice += dice_score.item()
 
         # Save the produced segmentation masks
         for out, label in zip(outputs, labels):
@@ -151,3 +169,6 @@ if __name__ == '__main__':
             Image.fromarray(label_mask.numpy().astype(np.uint8)).save(
                 str(output / f'original_label_{n}.png'))
             n += 1
+        print(f'Image {i} done, dice score: {dice_score.item()}')
+
+    print(f'Average Dice score: {sum_dice / len(test_dataloader)}')
