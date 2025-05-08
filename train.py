@@ -36,6 +36,8 @@ def get_args():
                         help='Learning rate for training')
     parser.add_argument('--num-epochs', default=20, type=int,
                         help='Number of epochs for training')
+    parser.add_argument('--load-model', action='store_true',
+                        help='Load model from file rather than training')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     return parser.parse_args()
 
@@ -116,8 +118,8 @@ if __name__ == '__main__':
 
     print(model)
 
-    output = Path(args.output_dir)
-    output.mkdir(parents=True, exist_ok=True)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -136,11 +138,15 @@ if __name__ == '__main__':
     #train_dataloader.to(device)
     #val_dataloader.to(device)
 
-    train(model, train_dataloader, val_dataloader, device,
-          args.learning_rate, args.num_epochs, args.verbose)
+    if args.load_model:
+        model.load_state_dict(torch.load('unet_model.pth'))
+        print('Model loaded from file.')
+    else:
+        train(model, train_dataloader, val_dataloader, device,
+              args.learning_rate, args.num_epochs, args.verbose)
 
-    # Save the model
-    torch.save(model.state_dict(), 'unet_model.pth')
+        # Save the model
+        torch.save(model.state_dict(), 'unet_model.pth')
 
     # Test the model
     test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size,
@@ -165,9 +171,9 @@ if __name__ == '__main__':
             for m, mask in enumerate(output_masks):
                 im = Image.fromarray(mask.numpy())
                 im = im.convert('L')
-                im.save(str(output / f'output_mask_{n}_{m}.png'))
+                im.save(str(output_dir / 'masks' / f'output_mask_{n}_{m}.png'))
             Image.fromarray(label_mask.numpy().astype(np.uint8)).save(
-                str(output / f'original_label_{n}.png'))
+                str(output_dir / 'labels' / f'original_label_{n}.png'))
             n += 1
         print(f'Image {i} done, dice score: {dice_score.item()}')
 
