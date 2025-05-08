@@ -139,14 +139,14 @@ if __name__ == '__main__':
     #val_dataloader.to(device)
 
     if args.load_model:
-        model.load_state_dict(torch.load('unet_model.pth'))
+        model.load_state_dict(torch.load(str(output_dir / 'unet_model.pth')))
         print('Model loaded from file.')
     else:
         train(model, train_dataloader, val_dataloader, device,
               args.learning_rate, args.num_epochs, args.verbose)
 
         # Save the model
-        torch.save(model.state_dict(), 'unet_model.pth')
+        torch.save(model.state_dict(), str(output_dir / 'unet_model.pth'))
 
     # Test the model
     test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size,
