@@ -122,8 +122,8 @@ if __name__ == '__main__':
     #train_dataloader.to(device)
     #val_dataloader.to(device)
 
-    #train(model, train_dataloader, val_dataloader, device,
-    #      args.learning_rate, args.num_epochs, args.verbose)
+    train(model, train_dataloader, val_dataloader, device,
+          args.learning_rate, args.num_epochs, args.verbose)
 
     # Save the model
     torch.save(model.state_dict(), 'unet_model.pth')
