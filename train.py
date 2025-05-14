@@ -147,7 +147,9 @@ if __name__ == '__main__':
 
         # Save the model
         torch.save(model.state_dict(), str(output_dir / 'unet_model.pth'))
+        print('Model trained and saved to file.')
 
+    print('Testing the model...')
     # Test the model
     test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size,
                                  shuffle=False, num_workers=2)
@@ -158,7 +160,7 @@ if __name__ == '__main__':
         inputs, labels = data
         inputs = inputs.to(device)
 
-        outputs = model(inputs)
+        outputs = model(inputs).cpu()
 
         dice_score = dice_loss(outputs, labels)
         sum_dice += dice_score.item()
