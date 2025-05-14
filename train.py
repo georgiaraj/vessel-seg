@@ -180,6 +180,6 @@ if __name__ == '__main__':
                 Image.fromarray(label_mask.numpy().astype(np.uint8)).save(
                     str(output_dir / 'labels' / f'original_label_{n}.png'))
                 n += 1
-            print(f'Image {i} done, dice score: {dice_score.item()}')
+        print(f'Image {i} done, dice score: {dice_score.item()}')
 
     print(f'Average Dice score: {sum_dice / len(test_dataloader)}')
