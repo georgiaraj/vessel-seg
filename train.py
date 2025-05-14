@@ -38,6 +38,8 @@ def get_args():
                         help='Number of epochs for training')
     parser.add_argument('--load-model', action='store_true',
                         help='Load model from file rather than training')
+    parser.add_argument('--save-masks', action='store_true',
+                        help='Save the output masks')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     return parser.parse_args()
 
@@ -165,18 +167,19 @@ if __name__ == '__main__':
         dice_score = dice_loss(outputs, labels)
         sum_dice += dice_score.item()
 
-        # Save the produced segmentation masks
-        for out, label in zip(outputs, labels):
-            output_masks = out.cpu().detach() * 255
-            label_mask = label * 50
-            # Save the output mask and original labels
-            for m, mask in enumerate(output_masks):
-                im = Image.fromarray(mask.numpy())
-                im = im.convert('L')
-                im.save(str(output_dir / 'masks' / f'output_mask_{n}_{m}.png'))
-            Image.fromarray(label_mask.numpy().astype(np.uint8)).save(
-                str(output_dir / 'labels' / f'original_label_{n}.png'))
-            n += 1
-        print(f'Image {i} done, dice score: {dice_score.item()}')
+        if args.save_masks:
+            # Save the produced segmentation masks
+            for out, label in zip(outputs, labels):
+                output_masks = out.cpu().detach() * 255
+                label_mask = label * 50
+                # Save the output mask and original labels
+                for m, mask in enumerate(output_masks):
+                    im = Image.fromarray(mask.numpy())
+                    im = im.convert('L')
+                    im.save(str(output_dir / 'masks' / f'output_mask_{n}_{m}.png'))
+                Image.fromarray(label_mask.numpy().astype(np.uint8)).save(
+                    str(output_dir / 'labels' / f'original_label_{n}.png'))
+                n += 1
+            print(f'Image {i} done, dice score: {dice_score.item()}')
 
     print(f'Average Dice score: {sum_dice / len(test_dataloader)}')
